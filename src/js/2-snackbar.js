@@ -1,44 +1,59 @@
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
-import iconClose from '../img/bi_x-octagon.png';
-import iconOk from '../img/bi_check2-circle.svg';
+import { alertOptions } from './alertOptions.js';
 
 const form = document.querySelector('.form');
-const submitBtn = document.querySelector('[type="submit"]');
+const radioButtons = document.querySelectorAll('input[name="state"]');
+const formFieldset = document.querySelector('fieldset');
 
-form.addEventListener('submit', function (event) {
-  event.preventDefault();
+const PRESSED = 'pressed';
+const CHECKED = 'checked';
+const FULFILLED = 'fulfilled';
 
-  const delay = Number(document.querySelector('[name="delay"]').value);
-  const state = document.querySelector('[name="state"]:checked');
+function handleRadioChange(event) {
+    const checkedLabel = document.querySelector('.checked');
+    const isPressed = formFieldset.classList.value.includes(PRESSED);
+    if (!isPressed) {
+        formFieldset.classList.add(PRESSED);
+    }
+    if (checkedLabel) {
+        checkedLabel.classList.remove(CHECKED);
+    }
+    const checkedRadio = document.querySelector('input[name="state"]:checked');
+    if (checkedRadio) {
+    const checkedLabel = checkedRadio.closest('label');
+    if (checkedLabel) {
+        checkedLabel.classList.add(CHECKED);
+        }
+    }
+}
 
-  const promise = new Promise((resolve, reject) => {
+const onSubmit = event => {
+    event.preventDefault();
+    const delay = Number(event.target.elements.delay.value);
+    const isFulfilled = event.target.elements.state.value === FULFILLED;
+
+const promise = new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (state.value === 'fulfilled') {
-        resolve(delay);
-      } else {
-        reject(delay);
-      }
-    }, delay);
-  });
-
-  promise
-    .then(delay => {
-      iziToast.success({
-        message: `Fulfilled promise in ${delay}ms`,
-        messageColor: '#FFF',
-        backgroundColor: '#59A10D',
-        position: 'topRight',
-        iconUrl: iconOk,
-      });
-    })
-    .catch(delay => {
-      iziToast.error({
-        message: `Rejected promise in ${delay}ms`,
-        messageColor: '#FFF',
-        backgroundColor: '#EF4040',
-        position: 'topRight',
-        iconUrl: iconClose,
-      });
+        if (isFulfilled) {
+            resolve(`Fulfilled promise in ${delay}ms`);
+        } else {
+            reject(`Rejected promise in ${delay}ms`);
+        }
+        }, delay);
     });
+
+promise
+    .then(value => {
+            iziToast.show({ ...alertOptions.success, message: value });
+        })
+        .catch(error => {
+            iziToast.show({ ...alertOptions.error, message: error });
+    });
+};
+
+form.addEventListener('submit', onSubmit);
+
+radioButtons.forEach(radioButton => {
+    radioButton.addEventListener('change', handleRadioChange);
 });
